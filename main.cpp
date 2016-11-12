@@ -12,33 +12,22 @@
  */
 
 #include <iostream>
-#include <utility>
-
-template <typename T>
-class Property {
-public:
-    Property(const T& var) : m_data(var) {};
-    Property(const Property<T>& prop) : m_data(prop.m_data) {};
-	Property(Property<T>&& prop) : m_data(std::move(prop.m_data)) {};
-    
-    const T operator() (const T& value) {
-        m_data = value;
-        return value;
-    }
-    const T operator()() const {
-        return m_data;
-    }
-
-private:
-    T& m_data;
-};
+#include "property.h"
 
 class Dummy {
 private:
     int m_var;
+    
+    bool OnSet(const int val) { return val != 0; }
+    bool OnGet(const int val) { return val != 0; }
 public:
-    Property<int> p;
-    Dummy(int val) : m_var(val), p(m_var) {};
+    Property<int> p1, p2;
+    const Property<int> p3;
+    Dummy(int val) : m_var(val),
+        p1(m_var,
+            [this](const int val) { return OnSet(val); },
+            [this](const int val) { return OnGet(val); }
+        ), p2(m_var), p3(m_var) {};
     
     int getVal() { return m_var; }
 };
@@ -46,9 +35,10 @@ public:
 int main(int argc, char** argv) {
     Dummy d(100);
     
-    std::cout << d.p() << std::endl;
-    d.p(111);
-    std::cout << d.getVal() << std::endl;
+    d.p1 = 222;
+    std::cout << d.p3 << std::endl;
+    std::cout << (d.p1 = -1) << std::endl;
+    std::cout << d.p3 << std::endl;
     return 0;
 }
 
