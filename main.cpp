@@ -12,19 +12,20 @@
  */
 
 #include <iostream>
+#include <utility>
 
 template <typename T>
 class Property {
 public:
-    Property(T& var) : m_data(var) {};
     Property(const T& var) : m_data(var) {};
     Property(const Property<T>& prop) : m_data(prop.m_data) {};
+	Property(Property<T>&& prop) : m_data(std::move(prop.m_data)) {};
     
-    const T operator= (const T& value) {
+    const T operator() (const T& value) {
         m_data = value;
         return value;
     }
-    const T operator*() const {
+    const T operator()() const {
         return m_data;
     }
 
@@ -45,9 +46,9 @@ public:
 int main(int argc, char** argv) {
     Dummy d(100);
     
-    std::cout << *d.p << std::endl;
-    d.p = 111;
-    std::cout << *d.p << std::endl;
+    std::cout << d.p() << std::endl;
+    d.p(111);
+    std::cout << d.getVal() << std::endl;
     return 0;
 }
 
