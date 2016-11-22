@@ -17,31 +17,28 @@
 class Dummy {
 private:
     int m_var;
-    
-    bool OnSet(const int val) { return val != 0; }
-    bool OnGet(const int val) { return val != 0; }
+
 public:
-    Property<int> p1, p2;
-    const Property<int> p3;
-    Dummy(const int& val) : m_var(val),
-        p1(m_var,
-            [this](const int val) { return OnSet(val); },
-            [this](const int val) { return OnGet(val); }
-        ), p2(m_var), p3(m_var) {};
-    
-    int getVal() { return m_var; }
+    Dummy(const int& val) : m_var(val), Value(m_var), ConstValue(m_var) {
+        autoValue = 999;
+    };
+
+    Property<int> autoValue;
+    Property<int> Value;
+    const Property<int> ConstValue;
+    int getVal() const { return m_var; }
 };
 
 int main(int argc, char** argv) {
-    Dummy d1(100);
-    const Dummy d2(999);
+    Dummy dummy(100);
+    std::cout << dummy.Value << " " << dummy.getVal() << std::endl;
+
+    dummy.Value = 200;
+    std::cout << dummy.ConstValue << " " << dummy.getVal() << std::endl;
     
-    d1.p1 = 222;
-    std::cout << d1.p3 << std::endl;
-    std::cout << d2.p3 << std::endl;
-    std::cout << (d1.p1 = -1) << std::endl;
-    std::cout << d1.p3 << std::endl;
-    std::cout << d2.p2 << std::endl;
+    std::cout << dummy.autoValue << " " << std::endl;
+    dummy.autoValue = 666;
+    std::cout << dummy.autoValue << " " << std::endl;
     return 0;
 }
 
