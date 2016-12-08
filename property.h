@@ -18,7 +18,7 @@
 #include <utility>
 #include <stdexcept>
 
-template <typename T> // T is a trivially copy-able/assignable/move-able type
+template <typename T> // T is a trivially copy-able/assignable/movable type
 class Property {
 public:
     typedef std::function<void (const T&)> Setter;
@@ -37,19 +37,17 @@ public:
         : m_ref(m_val), m_val(std::move(prop.m_val))
     {
         if (&prop.m_ref != &prop.m_val) {
-            throw std::logic_error("Only auto-properties can be copy-constructed");
+            throw std::logic_error("Only auto-properties can be move-constructed");
         }
         Set = std::move(prop.Set); Get = std::move(prop.Get);
     }
-    Property(
-            T& var, Setter onSet = nullptr, Getter onGet = nullptr
-        ) noexcept : m_ref(var)
+    Property(T& var, Setter onSet = nullptr, Getter onGet = nullptr) noexcept
+        : m_ref(var)
     {
         InitHandlers(onSet, onGet);
     };
-    Property(
-            const T& var, Setter onSet = nullptr, Getter onGet = nullptr
-        ) noexcept : m_ref(var)
+    Property(const T& var, Setter onSet = nullptr, Getter onGet = nullptr) noexcept
+        : m_ref(var)
     {
         InitHandlers(onSet, onGet);
     };
@@ -62,20 +60,22 @@ public:
     
     //---- Assignment operator-overload ----
     Property<T>& operator=(const Property<T>& prop) noexcept(false) {
-        if (&prop.m_ref != &prop.m_val && &m_ref != &m_val) {
+        if (&prop.m_ref != &prop.m_val || &m_ref != &m_val) {
             throw std::logic_error("Only auto-properties are assignable");
         }
         m_val = prop.m_val;
+        Set = prop.Set; Get = prop.Get;
         return *this;
     }
     Property<T>& operator=(Property<T>&& prop) noexcept(false) {
-        if (&prop.m_ref != &prop.m_val && &m_ref != &m_val) {
-            throw std::logic_error("Only auto-properties are move-assignable");
+        if (&prop.m_ref != &prop.m_val || &m_ref != &m_val) {
+            throw std::logic_error("Only auto-properties are movable");
         }
         m_val = std::move(prop.m_val);
+        Set = std::move(prop.Set); Get = std::move(prop.Get);
         return *this;
     }
-    Property<T>& operator=(const T& val) { Set(val); return *this; }
+    Property<T>& operator=(const T& val) noexcept(false) { Set(val); return *this; }
     
     //---- typecast overload ----
     operator const T() const { return Get(); }

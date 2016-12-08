@@ -44,6 +44,10 @@ void SimplestUseCase() {
     VERBOSE(obj.setVal(300);, __FILE__, __LINE__);
     std::cout << PRINT(obj.property)
             << "; " << PRINT(obj.getVal()) << std::endl;
+    
+//    Property<int> prop;
+//    prop = std::move(obj.property);
+//    std::cout << PRINT(prop) << std::endl;
 }
 
 void PropertyInConstObject() {
@@ -141,12 +145,22 @@ void AutoProperties() {
                 << __FILE__ << ":" << __LINE__
                 << " <<<<" << std::endl;
     }
+    
+    std::cout << "---- Assign / Move of Auto-properties ----" << std::endl;
+    VERBOSE(Property<int> prop6; prop6 = 12345;, __FILE__, __LINE__);
+    VERBOSE(Property<int> prop7;, __FILE__, __LINE__);
+    VERBOSE(prop7 = prop6, __FILE__, __LINE__);
+    std::cout << PRINT(prop6) << "; " << PRINT(prop7) << std::endl << std::endl;
+
+    VERBOSE(prop6 = 98765;, __FILE__, __LINE__);
+    VERBOSE(prop7 = std::move(prop6), __FILE__, __LINE__);
+    std::cout << PRINT(prop7) << std::endl << std::endl;
 }
 
 int main(int argc, char** argv) {
-//    SimplestUseCase();
-//    PropertyInConstObject();
-//    ExplicitReadonlyProperty();
+    SimplestUseCase();
+    PropertyInConstObject();
+    ExplicitReadonlyProperty();
     AutoProperties();
     return 0;
 }
