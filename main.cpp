@@ -16,7 +16,7 @@
 
 #define VERBOSE(x, f, l) x; std::cout << f << ":" << l << " --> "  \
                             << #x << std::endl;
-#define PRINT(x) #x << "==" << x
+#define PRINT(x) std::cout << #x << "==" << x
 #define PRINT_HDR(x) std::cout << std::endl << "==== " << x << " ====" << std::endl;
 
 void SimplestUseCase() {
@@ -35,19 +35,15 @@ void SimplestUseCase() {
         void setVal(int val) { m_var = val; }
     };
 
-    VERBOSE(PropertyWrapper obj(100);, __FILE__, __LINE__);
-    std::cout << PRINT(obj.property)
-            << "; " << PRINT(obj.getVal()) << std::endl;
-    VERBOSE(obj.property = 200;, __FILE__, __LINE__);
-    std::cout << PRINT(obj.property)
-            << "; " << PRINT(obj.getVal()) << std::endl;
-    VERBOSE(obj.setVal(300);, __FILE__, __LINE__);
-    std::cout << PRINT(obj.property)
-            << "; " << PRINT(obj.getVal()) << std::endl;
-    
-//    Property<int> prop;
-//    prop = std::move(obj.property);
-//    std::cout << PRINT(prop) << std::endl;
+    PropertyWrapper obj(100);
+    PRINT(obj.property) << "; ";
+    PRINT(obj.getVal()) << std::endl;
+    obj.property = 200;
+    PRINT(obj.property) << "; ";
+    PRINT(obj.getVal()) << std::endl;
+    obj.setVal(300);
+    PRINT(obj.property) << "; ";
+    PRINT(obj.getVal()) << std::endl;
 }
 
 void PropertyInConstObject() {
@@ -66,11 +62,11 @@ void PropertyInConstObject() {
         void setVal(int val) { m_var = val; }
     };
 
-    VERBOSE(const PropertyWrapper obj(100);, __FILE__, __LINE__);
-    std::cout << PRINT(obj.property)
-            << "; " << PRINT(obj.getVal()) << std::endl;
-    // obj.property = 200; - compile error
-    // obj.setVal(300); - compile error
+    const PropertyWrapper obj(100);
+    PRINT(obj.property) << "; ";
+    PRINT(obj.getVal()) << std::endl;
+//     obj.property = 200; //- compile error
+//     obj.setVal(300); //- compile error
 }
 
 void ExplicitReadonlyProperty() {
@@ -83,78 +79,66 @@ void ExplicitReadonlyProperty() {
     public:
         PropertyWrapper(const int& val) : m_var(val), property(m_var) {};
 
-        const Property<int> property;
+        const Property<int> property; // readonly property
         
         const int getVal() const { return m_var; }
         void setVal(int val) { m_var = val; }
     };
 
-    VERBOSE(PropertyWrapper obj(100);, __FILE__, __LINE__);
-    std::cout << PRINT(obj.property)
-            << "; " << PRINT(obj.getVal()) << std::endl;
+    PropertyWrapper obj(100);
+    PRINT(obj.property) << "; ";
+    PRINT(obj.getVal()) << std::endl;
 
     // obj.property = 200; - compile error
-    VERBOSE(obj.setVal(200);, __FILE__, __LINE__);
-    std::cout << PRINT(obj.property)
-            << "; " << PRINT(obj.getVal()) << std::endl;
+    obj.setVal(200);
+    PRINT(obj.property) << "; ";
+    PRINT(obj.getVal()) << std::endl;
 }
 
 void AutoProperties() {
     PRINT_HDR(__FUNCTION__);
     
     std::cout << "---- typical use ----" << std::endl;
-    VERBOSE(Property<int> prop;, __FILE__, __LINE__);
-    VERBOSE(prop = 1234;, __FILE__, __LINE__);
-    std::cout << PRINT(prop) << std::endl << std::endl;
-    
-    std::cout << "---- Use of Move Semantics with Auto-Property ----" << std::endl;
-    VERBOSE(Property<int> prop2;, __FILE__, __LINE__);
-    VERBOSE(prop2 = 9999;, __FILE__, __LINE__);
-    VERBOSE(auto prop3 = std::move(prop2);, __FILE__, __LINE__);
-    std::cout << PRINT(prop3) << std::endl << std::endl;
-    
-    try {
-        std::cout << "---- Try using the 'moved-out' property ----" << std::endl;
-        std::cout << __FILE__ << ":" << __LINE__ << " prop2==";
-        std::cout << prop2 << std::endl;
-    } catch(const std::exception &e) {
-        std::cout << " >>>> EXCEPTION occurred; " << e.what() << ". "
-                << __FILE__ << ":" << __LINE__
-                << " <<<<" << std::endl;
-    } catch(...) {
-        std::cout << " >>>> UNKNOWN EXCEPTION occurred; "
-                << __FILE__ << ":" << __LINE__
-                << " <<<<" << std::endl;
-    }
-    std::cout << std::endl;
-
-    try {
-        std::cout << "---- Typical Referencing / Wrapping Property ----" << std::endl;
-        VERBOSE(int dummy = 6666;, __FILE__, __LINE__);
-        VERBOSE(Property<int> prop4(dummy);, __FILE__, __LINE__);
-        std::cout << PRINT(prop4) << std::endl << std::endl;
-        
-        std::cout << "---- Try moving out the above Property ----" << std::endl;
-        VERBOSE(auto prop5 = std::move(prop4);, __FILE__, __LINE__);
-    } catch(const std::exception &e) {
-        std::cout << " >>>> EXCEPTION occurred; " << e.what() << ". "
-                << __FILE__ << ":" << __LINE__
-                << " <<<<" << std::endl;
-    } catch(...) {
-        std::cout << " >>>> UNKNOWN EXCEPTION occurred; "
-                << __FILE__ << ":" << __LINE__
-                << " <<<<" << std::endl;
-    }
+    Property<int> prop1;
+    prop1 = 1234;
+    PRINT(prop1) << std::endl << std::endl;
     
     std::cout << "---- Assign / Move of Auto-properties ----" << std::endl;
-    VERBOSE(Property<int> prop6; prop6 = 12345;, __FILE__, __LINE__);
-    VERBOSE(Property<int> prop7;, __FILE__, __LINE__);
-    VERBOSE(prop7 = prop6, __FILE__, __LINE__);
-    std::cout << PRINT(prop6) << "; " << PRINT(prop7) << std::endl << std::endl;
+    auto prop2 = std::move(prop1); prop1 = 9876;
+    PRINT(prop1) << "; ";
+    PRINT(prop2) << std::endl;
+    
+    auto prop3 = prop1;
+    PRINT(prop3) << std::endl;
+}
 
-    VERBOSE(prop6 = 98765;, __FILE__, __LINE__);
-    VERBOSE(prop7 = std::move(prop6), __FILE__, __LINE__);
-    std::cout << PRINT(prop7) << std::endl << std::endl;
+void PropertiesWithCustomChecker() {
+    PRINT_HDR(__FUNCTION__);
+    
+    Property<int> prop1([](const int& val) { return val % 2 == 0; });
+        // only even numbers can be assigned to this auto-property.
+    PRINT((prop1 = 2).IsAssigned) << "; "; PRINT(prop1) << std::endl;
+    PRINT((prop1 = 3).IsAssigned) << "; "; PRINT(prop1) << std::endl;
+    PRINT((prop1 = 4).IsAssigned) << "; "; PRINT(prop1) << std::endl;
+
+    class PropertyWrapper {
+    private:
+        int m_var;
+
+    public:
+        PropertyWrapper()
+            : evenOnly(m_var, [](const int& val) { return val%2 == 0; })
+        {}
+        Property<int> evenOnly;
+        
+        const int getVal() const { return m_var; }
+        void setVal(int val) { m_var = val; }
+    };
+
+    PropertyWrapper obj; obj.setVal(0);
+    PRINT((obj.evenOnly = 2).IsAssigned) << "; "; PRINT(obj.evenOnly) << std::endl;
+    PRINT((obj.evenOnly = 3).IsAssigned) << "; "; PRINT(obj.evenOnly) << std::endl;
+    PRINT((obj.evenOnly = 4).IsAssigned) << "; "; PRINT(obj.evenOnly) << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -162,6 +146,8 @@ int main(int argc, char** argv) {
     PropertyInConstObject();
     ExplicitReadonlyProperty();
     AutoProperties();
+    PropertiesWithCustomChecker();
+    
     return 0;
 }
 

@@ -16,88 +16,58 @@
 
 #include <functional>
 #include <utility>
-#include <stdexcept>
 
 template <typename T> // T is a trivially copy-able/assignable/movable type
 class Property {
 public:
-    typedef std::function<void (const T&)> Setter;
-    typedef std::function<const T ()> Getter;
+    typedef std::function<bool (const T&)> Checker;
 
     //---- Constructors ----
-    Property(const Property<T>& prop) noexcept(false) // copy-CTOR
-        : m_ref(m_val), m_val(prop.m_val)
-    {
-        if (&prop.m_ref != &prop.m_val) {
-            throw std::logic_error("Only auto-properties can be copy-constructed");
-        }
-        Set = prop.Set; Get = prop.Get;
-    }
-    Property(Property<T>&& prop) noexcept(false) // move-CTOR
-        : m_ref(m_val), m_val(std::move(prop.m_val))
-    {
-        if (&prop.m_ref != &prop.m_val) {
-            throw std::logic_error("Only auto-properties can be move-constructed");
-        }
-        Set = std::move(prop.Set); Get = std::move(prop.Get);
-    }
-    Property(T& var, Setter onSet = nullptr, Getter onGet = nullptr) noexcept
-        : m_ref(var)
-    {
-        InitHandlers(onSet, onGet);
-    };
-    Property(const T& var, Setter onSet = nullptr, Getter onGet = nullptr) noexcept
-        : m_ref(var)
-    {
-        InitHandlers(onSet, onGet);
-    };
-    Property(Setter onSet = nullptr) noexcept // CTOR for auto-property
-        : m_ref(m_val)
-    {
-        Getter onGet = nullptr;
-        InitHandlers(onSet, onGet);
-    }
-    
-    //---- Assignment operator-overload ----
-    Property<T>& operator=(const Property<T>& prop) noexcept(false) {
-        if (&prop.m_ref != &prop.m_val || &m_ref != &m_val) {
-            throw std::logic_error("Only auto-properties are assignable");
-        }
-        m_val = prop.m_val;
-        Set = prop.Set; Get = prop.Get;
-        return *this;
-    }
-    Property<T>& operator=(Property<T>&& prop) noexcept(false) {
-        if (&prop.m_ref != &prop.m_val || &m_ref != &m_val) {
-            throw std::logic_error("Only auto-properties are movable");
-        }
-        m_val = std::move(prop.m_val);
-        Set = std::move(prop.Set); Get = std::move(prop.Get);
-        return *this;
-    }
-    Property<T>& operator=(const T& val) noexcept(false) { Set(val); return *this; }
+    Property(T& var, Checker check = nullptr) noexcept
+            : m_ref(var), IsAuto(false), IsAssigned(false)
+        { Init(check); }
+    Property(Checker check = nullptr) noexcept // CTOR for auto-property
+            : m_ref(m_val), IsAuto(true), IsAssigned(false)
+        { Init(check); }
+    Property(const Property<T>& prop) noexcept // copy-CTOR for auto-property
+            : m_ref(m_val), IsAuto(true), IsAssigned(false)
+        { Init(nullptr); *this = prop; }
+    Property(Property<T>&& prop) noexcept // move-CTOR for auto-property
+            : m_ref(m_val), IsAuto(true), IsAssigned(false)
+        { Init(nullptr); *this = std::move(prop); }
     
     //---- typecast overload ----
-    operator const T() const { return Get(); }
+    operator const T() const noexcept { return m_ref; }
     
+    //---- Assignment operator-overload ----
+    Property<T>& operator=(T&& val) noexcept {
+        if ((IsAssigned = Check(val)))
+            m_ref = std::move(val);
+        return *this;
+    }
+    Property<T>& operator=(const T& val) noexcept {
+        if ((IsAssigned = Check(val)))
+            m_ref = val;
+        return *this;
+    }
+    Property<T>& operator=(const Property<T>& prop) noexcept {
+        return (*this = prop.m_ref);
+    }
+    Property<T>& operator=(Property<T>&& prop) noexcept {
+        return (*this = std::move(prop.m_val));
+    }
+    
+    mutable bool IsAssigned = false;
+    const bool& IsAuto; // Whether this object is an AutoProperty or not
+
 private:
-    mutable Setter Set;
-    mutable Getter Get;
     T& m_ref;
     T  m_val;
+    mutable Checker Check;
     
-    void InitHandlers(const Setter& set, const Getter& get) {
-        Set = set; Get = get;
-        if (Set == nullptr) {
-            Set = [this](const T& val) {
-                this->m_ref = val;
-            };
-        }
-        if (Get == nullptr) {
-            Get = [this]() -> const T {
-                return this->m_ref;
-            };
-        }
+    void Init(const Checker& check) {
+        if ((Check = check) == nullptr)
+            Check = [](const T&) { return true; };
     }
 };
 
