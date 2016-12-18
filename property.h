@@ -23,16 +23,16 @@ public:
     typedef std::function<bool (const T&)> Checker;
 
     //---- Constructors ----
-    Property(T& var, Checker check = nullptr) noexcept
+    Property(T& var, Checker check = nullptr) noexcept // CTOR for "wrapping" property
             : m_ref(var), IsAuto(false), IsAssigned(false)
         { Init(check); }
     Property(Checker check = nullptr) noexcept // CTOR for auto-property
             : m_ref(m_val), IsAuto(true), IsAssigned(false)
         { Init(check); }
-    Property(const Property<T>& prop) noexcept // copy-CTOR for auto-property
+    Property(const Property<T>& prop) noexcept // copy-CTOR; creates auto-property
             : m_ref(m_val), IsAuto(true), IsAssigned(false)
         { Init(nullptr); *this = prop; }
-    Property(Property<T>&& prop) noexcept // move-CTOR for auto-property
+    Property(Property<T>&& prop) noexcept // move-CTOR; creates auto-property
             : m_ref(m_val), IsAuto(true), IsAssigned(false)
         { Init(nullptr); *this = std::move(prop); }
     
