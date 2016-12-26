@@ -4,3 +4,6 @@ dist/
 dist/**
 *.o
 **/*.o
+/missfont.log
+/test.html
+/test.pdf
