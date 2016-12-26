@@ -69,13 +69,13 @@ public:
         return (*this = std::move(prop.m_val));
     }
     
-    mutable bool IsAssigned = false;
+    bool IsAssigned = false;
     const bool& IsAuto; // Whether this object is an AutoProperty or not
 
 private:
     T& m_ref;
     T  m_val;
-    mutable Checker Check;
+    Checker Check;
     
     void Init(const Checker& check) {
         if ((Check = check) == nullptr)
